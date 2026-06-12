@@ -21,11 +21,25 @@ make up
 
 `FCM_FAKE=1` (default in Docker) runs the entire stack without real Firebase credentials. All QA uses this mode.
 
+## Running the smoke test
+
+With the stack running (`make up`):
+
+```bash
+./scripts/smoke.sh
+```
+
 ## Running tests
 
 ```bash
-cd backend && pytest
+# Backend
+cd backend && pytest -q
+
+# Frontend
 cd frontend && npm run test -- --run
+
+# Full stack smoke (requires docker compose up)
+./scripts/smoke.sh
 ```
 
 ## Docs
