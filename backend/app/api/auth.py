@@ -1,5 +1,7 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from slowapi import Limiter
+from slowapi.util import get_remote_address
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -10,13 +12,13 @@ from app.schemas.auth import LoginIn, TokenOut
 
 router = APIRouter()
 security = HTTPBearer()
+_limiter = Limiter(key_func=get_remote_address)
 
 
 async def get_current_admin(
     credentials: HTTPAuthorizationCredentials = Depends(security),
     db: AsyncSession = Depends(get_db),
 ) -> AdminUser:
-    """FastAPI dependency: validates JWT bearer token and returns the active AdminUser."""
     token = credentials.credentials
     payload = decode_access_token(token)
     if payload is None:
@@ -49,8 +51,8 @@ async def get_current_admin(
 
 
 @router.post("/login", response_model=TokenOut)
-async def login(body: LoginIn, db: AsyncSession = Depends(get_db)) -> TokenOut:
-    """Public endpoint: email + password → JWT access token."""
+@_limiter.limit("5/minute")
+async def login(request: Request, body: LoginIn, db: AsyncSession = Depends(get_db)) -> TokenOut:
     result = await db.execute(
         select(AdminUser).where(AdminUser.email == body.email, AdminUser.is_active == True)  # noqa: E712
     )
@@ -69,5 +71,4 @@ async def login(body: LoginIn, db: AsyncSession = Depends(get_db)) -> TokenOut:
 
 @router.get("/me")
 async def get_me(admin: AdminUser = Depends(get_current_admin)) -> dict:
-    """Protected endpoint: returns current admin info."""
     return {"id": str(admin.id), "email": admin.email, "is_active": admin.is_active}

@@ -1,6 +1,10 @@
 import uuid
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
+from slowapi import Limiter
+from slowapi.util import get_remote_address
 from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.api.auth import get_current_admin
 from app.db.session import get_db
 from app.models.admin import AdminUser
@@ -10,6 +14,7 @@ from app.schemas.device import DeviceOut, DeviceRegisteredOut, RegisterDeviceIn
 from app.services.fcm import FcmClient, get_fcm_client
 
 router = APIRouter()
+_limiter = Limiter(key_func=get_remote_address)
 
 
 def mask_token(token: str) -> str:
@@ -19,7 +24,9 @@ def mask_token(token: str) -> str:
 
 
 @router.post("/register", response_model=DeviceRegisteredOut, status_code=200)
+@_limiter.limit("10/minute")
 async def register_device(
+    request: Request,
     body: RegisterDeviceIn,
     db: AsyncSession = Depends(get_db),
     fcm: FcmClient = Depends(get_fcm_client),
