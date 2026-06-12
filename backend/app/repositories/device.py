@@ -1,8 +1,10 @@
 import uuid
 from datetime import datetime, timezone
+
 from sqlalchemy import func, select, update
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.models.device import PushDevice
 from app.schemas.device import RegisterDeviceIn
 
