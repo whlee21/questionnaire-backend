@@ -1,7 +1,7 @@
-import React from 'react'
-interface Column<T> { key: string; header: string; render?: (row: T) => React.ReactNode; width?: string }
+import { type ReactNode } from 'react'
+interface Column<T> { key: string; header: string; render?: (row: T) => ReactNode; width?: string }
 interface TableProps<T> { columns: Column<T>[]; data: T[]; keyField: keyof T; emptyMessage?: string; loading?: boolean }
-export function Table<T extends Record<string, unknown>>({ columns, data, keyField, emptyMessage = 'No data', loading = false }: TableProps<T>) {
+export function Table<T extends object>({ columns, data, keyField, emptyMessage = 'No data', loading = false }: TableProps<T>) {
   return (
     <div style={{ overflowX: 'auto' }}>
       <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 'var(--text-sm)' }}>
@@ -16,8 +16,8 @@ export function Table<T extends Record<string, unknown>>({ columns, data, keyFie
           ) : data.length === 0 ? (
             <tr><td colSpan={columns.length} style={{ padding: '24px', textAlign: 'center', color: 'var(--color-text-muted)' }}>{emptyMessage}</td></tr>
           ) : data.map(row => (
-            <tr key={String(row[keyField])} style={{ borderBottom: '1px solid var(--color-border)' }}>
-              {columns.map(col => <td key={col.key} style={{ padding: '10px 12px' }}>{col.render ? col.render(row) : String(row[col.key] ?? '')}</td>)}
+            <tr key={String((row as Record<string, unknown>)[keyField as string])} style={{ borderBottom: '1px solid var(--color-border)' }}>
+              {columns.map(col => <td key={col.key} style={{ padding: '10px 12px' }}>{col.render ? col.render(row) : String((row as Record<string, unknown>)[col.key] ?? '')}</td>)}
             </tr>
           ))}
         </tbody>

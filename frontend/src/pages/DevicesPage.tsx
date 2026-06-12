@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { useToast } from '../contexts/ToastContext'
 import { apiClient } from '../api/client'
@@ -98,9 +98,9 @@ export default function DevicesPage() {
         </div>
       </div>
       <Card>
-        <Table
+        <Table<Device>
           columns={columns}
-          data={devices as unknown as Record<string, unknown>[]}
+          data={devices}
           keyField="id"
           loading={loading}
           emptyMessage="No devices registered yet"

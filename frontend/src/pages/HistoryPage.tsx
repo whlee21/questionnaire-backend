@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { useToast } from '../contexts/ToastContext'
 import { apiClient } from '../api/client'
@@ -81,9 +81,9 @@ export default function HistoryPage() {
         </div>
       </div>
       <Card>
-        <Table
+        <Table<SendEvent>
           columns={columns}
-          data={events as unknown as Record<string, unknown>[]}
+          data={events}
           keyField="id"
           loading={loading}
           emptyMessage="No send history yet"
@@ -98,7 +98,7 @@ export default function HistoryPage() {
       )}
       {selected && (
         <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }} onClick={() => setSelected(null)}>
-          <Card style={{ maxWidth: '480px', width: '100%', margin: '24px' }} onClick={(e: React.MouseEvent) => e.stopPropagation()}>
+          <Card style={{ maxWidth: '480px', width: '100%', margin: '24px' }} onClick={(e) => e.stopPropagation()}>
             <h2 style={{ margin: '0 0 16px' }}>Send Event Detail</h2>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: 'var(--text-sm)' }}>
               <div><strong>Target:</strong> {selected.target_type} — {selected.target_summary}</div>
