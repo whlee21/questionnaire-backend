@@ -4,7 +4,10 @@ import { ToastProvider } from './contexts/ToastContext'
 import { ProtectedRoute } from './components/ProtectedRoute'
 import { AppLayout } from './components/AppLayout'
 import LoginPage from './pages/LoginPage'
-import DashboardPage from './pages/DashboardPage'
+import ComposePage from './pages/ComposePage'
+import DevicesPage from './pages/DevicesPage'
+import TopicsPage from './pages/TopicsPage'
+import HistoryPage from './pages/HistoryPage'
 import './ui/tokens.css'
 
 function App() {
@@ -17,10 +20,10 @@ function App() {
             <Route element={<ProtectedRoute />}>
               <Route element={<AppLayout />}>
                 <Route path="/" element={<Navigate to="/compose" replace />} />
-                <Route path="/compose" element={<DashboardPage />} />
-                <Route path="/devices" element={<DashboardPage />} />
-                <Route path="/topics" element={<DashboardPage />} />
-                <Route path="/history" element={<DashboardPage />} />
+                <Route path="/compose" element={<ComposePage />} />
+                <Route path="/devices" element={<DevicesPage />} />
+                <Route path="/topics" element={<TopicsPage />} />
+                <Route path="/history" element={<HistoryPage />} />
               </Route>
             </Route>
           </Routes>
