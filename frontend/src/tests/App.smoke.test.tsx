@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { AuthProvider } from '../contexts/AuthContext'
+import { ToastProvider } from '../contexts/ToastContext'
 import { ProtectedRoute } from '../components/ProtectedRoute'
 import LoginPage from '../pages/LoginPage'
 import DashboardPage from '../pages/DashboardPage'
@@ -15,16 +16,18 @@ describe('App routing', () => {
     render(
       <MemoryRouter initialEntries={['/compose']}>
         <AuthProvider>
-          <Routes>
-            <Route path="/login" element={<LoginPage />} />
-            <Route element={<ProtectedRoute />}>
-              <Route path="/compose" element={<DashboardPage />} />
-            </Route>
-          </Routes>
+          <ToastProvider>
+            <Routes>
+              <Route path="/login" element={<LoginPage />} />
+              <Route element={<ProtectedRoute />}>
+                <Route path="/compose" element={<DashboardPage />} />
+              </Route>
+            </Routes>
+          </ToastProvider>
         </AuthProvider>
       </MemoryRouter>
     )
-    expect(screen.getByRole('heading', { name: /login/i })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: /pushnotify/i })).toBeInTheDocument()
     expect(screen.queryByText(/dashboard/i)).not.toBeInTheDocument()
   })
 
@@ -33,12 +36,14 @@ describe('App routing', () => {
     render(
       <MemoryRouter initialEntries={['/compose']}>
         <AuthProvider>
-          <Routes>
-            <Route path="/login" element={<LoginPage />} />
-            <Route element={<ProtectedRoute />}>
-              <Route path="/compose" element={<DashboardPage />} />
-            </Route>
-          </Routes>
+          <ToastProvider>
+            <Routes>
+              <Route path="/login" element={<LoginPage />} />
+              <Route element={<ProtectedRoute />}>
+                <Route path="/compose" element={<DashboardPage />} />
+              </Route>
+            </Routes>
+          </ToastProvider>
         </AuthProvider>
       </MemoryRouter>
     )
