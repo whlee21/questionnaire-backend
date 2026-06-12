@@ -1,4 +1,4 @@
-.PHONY: up down test seed lint typecheck
+.PHONY: up down test seed lint typecheck migrate makemigrations
 
 up:
 	docker compose up -d
@@ -20,3 +20,9 @@ lint:
 typecheck:
 	cd backend && mypy app
 	cd frontend && npx tsc --noEmit
+
+migrate:
+	cd backend && alembic upgrade head
+
+makemigrations:
+	cd backend && alembic revision --autogenerate -m "$(MSG)"
