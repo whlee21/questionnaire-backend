@@ -3,6 +3,7 @@ import logging
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.api.router import api_router
 from app.core.config import get_settings
 
 
@@ -31,5 +32,7 @@ def create_app() -> FastAPI:
     @app.get("/health", tags=["system"])
     async def health() -> dict:
         return {"status": "ok"}
+
+    app.include_router(api_router, prefix="/api/v1")
 
     return app
