@@ -1,0 +1,31 @@
+:root {
+  --color-bg: #ffffff;
+  --color-bg-subtle: #f8f9fa;
+  --color-sidebar: #1a1f2e;
+  --color-sidebar-hover: #252b3d;
+  --color-sidebar-active: #6366f1;
+  --color-accent: #6366f1;
+  --color-accent-hover: #4f46e5;
+  --color-accent-light: #eef2ff;
+  --color-text: #111827;
+  --color-text-muted: #6b7280;
+  --color-text-sidebar: #9ca3af;
+  --color-text-sidebar-active: #ffffff;
+  --color-border: #e5e7eb;
+  --color-error: #ef4444;
+  --color-error-light: #fef2f2;
+  --color-success: #10b981;
+  --color-warning: #f59e0b;
+  --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-4: 16px;
+  --space-5: 20px; --space-6: 24px; --space-8: 32px;
+  --font-sans: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
+  --text-xs: 12px; --text-sm: 14px; --text-base: 16px;
+  --text-lg: 18px; --text-xl: 20px; --text-2xl: 24px;
+  --radius-sm: 4px; --radius-md: 6px; --radius-lg: 8px; --radius-full: 9999px;
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1);
+  --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1);
+  --sidebar-width: 240px;
+  --topbar-height: 56px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
