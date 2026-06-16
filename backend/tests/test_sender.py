@@ -137,7 +137,6 @@ async def test_oversized_payload_raises():
 
 @pytest.mark.asyncio
 async def test_transient_error_does_not_invalidate():
-    """OTHER errors must NOT invalidate tokens."""
     fcm = FakeFcmClient()
     fcm.set_token_response("tok-transient", "OTHER")
     db = make_db()
@@ -155,3 +154,62 @@ async def test_transient_error_does_not_invalidate():
     assert "tok-transient" not in result.invalidated_tokens
     assert result.failure_count == 1
     db.execute.assert_not_awaited()
+
+
+@pytest.mark.asyncio
+async def test_send_broadcast_returns_message_id():
+    fcm = FakeFcmClient()
+    db = make_db()
+
+    result = await send_notification(
+        db=db,
+        fcm=fcm,
+        request=SendRequest(
+            target={"type": "broadcast"},
+            notification={"title": "T", "body": "B"},
+        ),
+        actor="admin@example.com",
+    )
+
+    assert len(result.message_ids) == 1
+    assert result.message_ids[0].startswith("projects/")
+
+
+@pytest.mark.asyncio
+async def test_send_token_returns_message_id():
+    fcm = FakeFcmClient()
+    db = make_db()
+
+    result = await send_notification(
+        db=db,
+        fcm=fcm,
+        request=SendRequest(
+            target={"type": "token", "token": "tok-abc"},
+            notification={"title": "T", "body": "B"},
+        ),
+        actor="admin@example.com",
+    )
+
+    assert len(result.message_ids) == 1
+    assert result.message_ids[0].startswith("projects/")
+
+
+@pytest.mark.asyncio
+async def test_send_tokens_message_ids_match_successes():
+    fcm = FakeFcmClient()
+    fcm.set_token_response("tok-dead", "UNREGISTERED")
+    db = make_db(device=MagicMock())
+
+    result = await send_notification(
+        db=db,
+        fcm=fcm,
+        request=SendRequest(
+            target={"type": "tokens", "tokens": ["tok-ok", "tok-dead"]},
+            notification={"title": "T", "body": "B"},
+        ),
+        actor="admin@example.com",
+    )
+
+    assert result.success_count == 1
+    assert len(result.message_ids) == 1
+    assert result.message_ids[0].startswith("projects/")

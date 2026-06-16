@@ -117,9 +117,60 @@ async def test_invalid_argument_in_invalidated_tokens():
 
 @pytest.mark.asyncio
 async def test_other_error_not_in_invalidated_tokens():
-    """OTHER errors (transient) should NOT be in invalidated_tokens."""
     client = FakeFcmClient()
     client.set_token_response("tok-transient", "OTHER")
     result = await client.send_many(["tok-transient"], {"title": "T", "body": "B"}, {})
     assert "tok-transient" not in result.invalidated_tokens
     assert result.failure_count == 1
+
+
+@pytest.mark.asyncio
+async def test_send_one_returns_message_id():
+    client = FakeFcmClient()
+    result = await client.send_one("tok-1", {"title": "T", "body": "B"}, {})
+    assert result.success
+    assert result.message_id is not None
+    assert result.message_id.startswith("projects/")
+
+
+@pytest.mark.asyncio
+async def test_send_one_failure_has_no_message_id():
+    client = FakeFcmClient()
+    client.set_token_response("tok-dead", "UNREGISTERED")
+    result = await client.send_one("tok-dead", {"title": "T", "body": "B"}, {})
+    assert not result.success
+    assert result.message_id is None
+
+
+@pytest.mark.asyncio
+async def test_send_many_message_ids_on_success():
+    client = FakeFcmClient()
+    result = await client.send_many(["tok-1", "tok-2"], {"title": "T", "body": "B"}, {})
+    assert len(result.message_ids) == 2
+    assert all(mid.startswith("projects/") for mid in result.message_ids)
+
+
+@pytest.mark.asyncio
+async def test_send_many_failed_token_excluded_from_message_ids():
+    client = FakeFcmClient()
+    client.set_token_response("tok-dead", "UNREGISTERED")
+    result = await client.send_many(["tok-ok", "tok-dead"], {"title": "T", "body": "B"}, {})
+    assert len(result.message_ids) == 1
+    assert result.message_ids[0].startswith("projects/")
+
+
+@pytest.mark.asyncio
+async def test_send_topic_returns_message_id():
+    client = FakeFcmClient()
+    result = await client.send_topic("news", {"title": "T", "body": "B"}, {})
+    assert result.success
+    assert result.message_id is not None
+    assert result.message_id.startswith("projects/")
+
+
+@pytest.mark.asyncio
+async def test_message_ids_are_unique_across_sends():
+    client = FakeFcmClient()
+    r1 = await client.send_one("tok-1", {"title": "T", "body": "B"}, {})
+    r2 = await client.send_one("tok-2", {"title": "T", "body": "B"}, {})
+    assert r1.message_id != r2.message_id
