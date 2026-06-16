@@ -94,13 +94,24 @@ async def send_notification(
         success_count = batch_result.success_count
         failure_count = batch_result.failure_count
         invalidated_tokens = batch_result.invalidated_tokens
+        message_ids = batch_result.message_ids
     else:
         success_count = 1 if topic_result and topic_result.success else 0
         failure_count = 0 if success_count else 1
         invalidated_tokens = []
+        message_ids = [topic_result.message_id] if topic_result and topic_result.message_id else []
 
     if not request.dry_run and batch_result is not None:
         await _invalidate_failed_tokens(db, batch_result)
+
+    logger.info(
+        "send target=%s summary=%s success=%d failure=%d message_ids=%s",
+        target_type,
+        target_summary,
+        success_count,
+        failure_count,
+        message_ids,
+    )
 
     event = PushSendEvent(
         actor=actor,
@@ -114,6 +125,7 @@ async def send_notification(
         success_count=success_count,
         failure_count=failure_count,
         idempotency_key=request.idempotency_key,
+        message_ids=message_ids,
     )
     db.add(event)
     await db.flush()
@@ -123,6 +135,7 @@ async def send_notification(
         failure_count=failure_count,
         invalidated_tokens=invalidated_tokens,
         dry_run=request.dry_run,
+        message_ids=message_ids,
     )
 
 

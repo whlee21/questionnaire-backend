@@ -20,6 +20,7 @@ class TokenResult:
     token: str
     success: bool
     error_code: str | None = None
+    message_id: str | None = None
 
 
 @dataclass
@@ -36,12 +37,15 @@ class BatchResult:
 
     @property
     def invalidated_tokens(self) -> list[str]:
-        """Tokens that should be cleaned up (UNREGISTERED or INVALID_ARGUMENT)."""
         return [
             r.token
             for r in self.token_results
             if r.error_code in ("UNREGISTERED", "INVALID_ARGUMENT")
         ]
+
+    @property
+    def message_ids(self) -> list[str]:
+        return [r.message_id for r in self.token_results if r.success and r.message_id]
 
 
 @runtime_checkable
@@ -121,7 +125,7 @@ class FirebaseFcmClient:
     ) -> TokenResult:
         from firebase_admin import messaging
 
-        def _send() -> None:
+        def _send() -> str:
             self._ensure_initialized()
             msg = messaging.Message(
                 token=token,
@@ -132,11 +136,11 @@ class FirebaseFcmClient:
                 ),
                 data=self._coerce_data(data),
             )
-            messaging.send(msg, dry_run=dry_run)
+            return messaging.send(msg, dry_run=dry_run)
 
         try:
-            await run_in_threadpool(_send)
-            return TokenResult(token=token, success=True)
+            message_id: str = await run_in_threadpool(_send)
+            return TokenResult(token=token, success=True, message_id=message_id)
         except Exception as exc:
             error_code = self._map_error(exc)
             logger.warning("FCM send_one failed token=%s... code=%s", token[:8], error_code)
@@ -174,7 +178,9 @@ class FirebaseFcmClient:
                 for j, resp in enumerate(batch_response.responses):
                     tok = chunk[j]
                     if resp.success:
-                        all_results.append(TokenResult(token=tok, success=True))
+                        all_results.append(
+                            TokenResult(token=tok, success=True, message_id=resp.message_id)
+                        )
                     else:
                         error_code = (
                             self._map_error(resp.exception) if resp.exception else "OTHER"
@@ -200,7 +206,7 @@ class FirebaseFcmClient:
     ) -> TokenResult:
         from firebase_admin import messaging
 
-        def _send() -> None:
+        def _send() -> str:
             self._ensure_initialized()
             msg = messaging.Message(
                 topic=topic,
@@ -211,11 +217,11 @@ class FirebaseFcmClient:
                 ),
                 data=self._coerce_data(data),
             )
-            messaging.send(msg, dry_run=dry_run)
+            return messaging.send(msg, dry_run=dry_run)
 
         try:
-            await run_in_threadpool(_send)
-            return TokenResult(token=f"topic:{topic}", success=True)
+            message_id: str = await run_in_threadpool(_send)
+            return TokenResult(token=f"topic:{topic}", success=True, message_id=message_id)
         except Exception as exc:
             error_code = self._map_error(exc)
             return TokenResult(token=f"topic:{topic}", success=False, error_code=error_code)
@@ -252,6 +258,11 @@ class FakeFcmClient:
         self.sent_messages: list[dict] = []
         self._token_responses: dict[str, str | None] = {}
         self.subscriptions: dict[str, set[str]] = {}
+        self._msg_counter: int = 0
+
+    def _next_message_id(self) -> str:
+        self._msg_counter += 1
+        return f"projects/fake-project/messages/fake-{self._msg_counter:06d}"
 
     def set_token_response(self, token: str, error_code: str | None) -> None:
         """Configure a token to return a specific error code (None = success)."""
@@ -264,15 +275,22 @@ class FakeFcmClient:
         data: dict[str, str],
         dry_run: bool = False,
     ) -> TokenResult:
+        message_id = self._next_message_id()
         self.sent_messages.append({
             "type": "single",
             "token": token,
             "notification": notification,
             "data": {k: str(v) for k, v in data.items()},
             "dry_run": dry_run,
+            "message_id": message_id,
         })
         error_code = self._token_responses.get(token)
-        return TokenResult(token=token, success=error_code is None, error_code=error_code)
+        return TokenResult(
+            token=token,
+            success=error_code is None,
+            error_code=error_code,
+            message_id=message_id if error_code is None else None,
+        )
 
     async def send_many(
         self,
@@ -295,8 +313,14 @@ class FakeFcmClient:
             })
             for token in chunk:
                 error_code = self._token_responses.get(token)
+                message_id = self._next_message_id() if error_code is None else None
                 all_results.append(
-                    TokenResult(token=token, success=error_code is None, error_code=error_code)
+                    TokenResult(
+                        token=token,
+                        success=error_code is None,
+                        error_code=error_code,
+                        message_id=message_id,
+                    )
                 )
 
         return BatchResult(token_results=all_results)
@@ -308,14 +332,16 @@ class FakeFcmClient:
         data: dict[str, str],
         dry_run: bool = False,
     ) -> TokenResult:
+        message_id = self._next_message_id()
         self.sent_messages.append({
             "type": "topic",
             "topic": topic,
             "notification": notification,
             "data": {k: str(v) for k, v in data.items()},
             "dry_run": dry_run,
+            "message_id": message_id,
         })
-        return TokenResult(token=f"topic:{topic}", success=True)
+        return TokenResult(token=f"topic:{topic}", success=True, message_id=message_id)
 
     async def subscribe(self, tokens: list[str], topic: str) -> None:
         self.subscriptions.setdefault(topic, set()).update(tokens)

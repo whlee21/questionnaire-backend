@@ -47,3 +47,4 @@ class SendResultOut(BaseModel):
     failure_count: int
     invalidated_tokens: list[str] = Field(default_factory=list)
     dry_run: bool
+    message_ids: list[str] = Field(default_factory=list)

@@ -20,4 +20,5 @@ class PushSendEvent(Base):
     success_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     failure_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     idempotency_key: Mapped[str | None] = mapped_column(String(255), nullable=True, index=True)
+    message_ids: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False, index=True)
