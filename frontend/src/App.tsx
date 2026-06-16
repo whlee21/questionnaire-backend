@@ -8,6 +8,7 @@ import ComposePage from './pages/ComposePage'
 import DevicesPage from './pages/DevicesPage'
 import TopicsPage from './pages/TopicsPage'
 import HistoryPage from './pages/HistoryPage'
+import SettingsPage from './pages/SettingsPage'
 import './ui/tokens.css'
 
 function App() {
@@ -24,6 +25,7 @@ function App() {
                 <Route path="/devices" element={<DevicesPage />} />
                 <Route path="/topics" element={<TopicsPage />} />
                 <Route path="/history" element={<HistoryPage />} />
+                <Route path="/settings" element={<SettingsPage />} />
               </Route>
             </Route>
           </Routes>

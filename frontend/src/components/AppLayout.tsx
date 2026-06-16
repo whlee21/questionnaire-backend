@@ -6,6 +6,7 @@ const navItems = [
   { to: '/devices', label: 'Devices', icon: 'phone' },
   { to: '/topics', label: 'Topics', icon: 'broadcast' },
   { to: '/history', label: 'Send History', icon: 'list' },
+  { to: '/settings', label: 'Settings', icon: 'gear' },
 ]
 
 export function AppLayout() {
