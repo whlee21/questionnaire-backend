@@ -10,13 +10,22 @@ from slowapi.util import get_remote_address
 from app.api.router import api_router
 from app.core.config import get_settings
 
-# Module-level limiter (imported by endpoint modules)
 limiter = Limiter(key_func=get_remote_address)
+
+logger = logging.getLogger(__name__)
+
+_SENSITIVE_FIELDS = {"JWT_SECRET", "ADMIN_PASSWORD", "DATABASE_URL"}
+
+
+def _mask(field: str, value: object) -> str:
+    raw = str(value)
+    if field in _SENSITIVE_FIELDS and raw:
+        visible = min(4, len(raw))
+        return raw[:visible] + "****"
+    return raw
 
 
 class _FcmTokenScrubFilter(logging.Filter):
-    """Remove raw FCM tokens (long base64-like strings) from log records."""
-
     _PATTERN = re.compile(r'[A-Za-z0-9_\-:]{100,}')
 
     def filter(self, record: logging.LogRecord) -> bool:
@@ -33,13 +42,18 @@ class _FcmTokenScrubFilter(logging.Filter):
 def create_app() -> FastAPI:
     settings = get_settings()
 
+    log_level = getattr(logging, settings.LOG_LEVEL)
     logging.basicConfig(
-        level=logging.INFO,
+        level=log_level,
         format="%(asctime)s %(name)s %(levelname)s %(message)s",
     )
+    logging.root.setLevel(log_level)
     scrub_filter = _FcmTokenScrubFilter()
     for handler in logging.root.handlers:
         handler.addFilter(scrub_filter)
+
+    for field, value in settings.model_dump().items():
+        logger.debug("config %s = %s", field, _mask(field, value))
 
     app = FastAPI(
         title="PushNotify API",
