@@ -20,13 +20,18 @@ services:
     depends_on:
       db:
         condition: service_healthy
+    volumes:
+      - ./backend/serviceAccount.json:/app/serviceAccount.json:ro
     environment:
       DATABASE_URL: postgresql+asyncpg://postgres:postgres@db:5432/pushnotify
-      FCM_FAKE: "1"
-      JWT_SECRET: dev_secret_change_in_production
+      FCM_FAKE: "0"
+      JWT_SECRET: bb9cb247d8695befec4a486bccbc1b3851b48c1fa309614f05be2b3bc3ebfe8f5434aaaeb9ff162dfef83b929eecc4027f7d6a722b31564379643fd9d78375d5
       CORS_ORIGINS: '["http://localhost:5173","http://localhost:3000"]'
       ADMIN_EMAIL: admin@example.com
       ADMIN_PASSWORD: changeme123
+      LOG_LEVEL: "DEBUG"
+      FIREBASE_PROJECT_ID: banttas-questionnaire-app
+      GOOGLE_APPLICATION_CREDENTIALS: /app/serviceAccount.json
     env_file:
       - ./backend/.env
     command: >

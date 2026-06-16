@@ -1,17 +1,17 @@
 .PHONY: up down test seed lint typecheck migrate makemigrations
 
 up:
-	docker compose up -d
+	podman compose up -d
 
 down:
-	docker compose down
+	podman compose down
 
 test:
 	cd backend && python -m pytest -q
 	cd frontend && npm run test -- --run
 
 seed:
-	docker compose exec backend python scripts/seed_admin.py
+	podman compose exec backend python scripts/seed_admin.py
 
 lint:
 	cd backend && ruff check .
